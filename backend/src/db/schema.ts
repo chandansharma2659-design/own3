@@ -1,0 +1,94 @@
+import {text, integer, pgTable, uuid, jsonb, timestamp, boolean} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm"
+
+export type OrderStatus = "pending" | "paid" | "failed"
+export type UserRole = "customer" | "admin"
+export type checkoutSessions = {
+    productId: string;
+    quantity: number;
+    unitPriceCents: number;
+}
+
+export const users = pgTable("users", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkUserId: text("clerk_user_id").notNull().unique(),
+    email: text("email").unique().notNull(),
+    displayName: text("display_name").notNull(),
+    role: text("role").$type<UserRole>().notNull().default("customer"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().notNull(),
+});
+
+export const products = pgTable("products", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull().unique(),
+    name: text("name").notNull(),
+    category: text("category").notNull().default("general"),
+    price: integer("price").notNull(),
+    currency: text("currency").notNull().default("USD"),
+    imageUrl: text("image_url"),
+    metadata: jsonb("metadata"),
+    description: text("description").notNull(),
+    imageKitField: text("image_kit_field"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", {withTimezone: true}).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const checkoutSessions = pgTable("checkout_sessions",{
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    polarCheckoutId: text("polar_checkout_id").notNull().unique(),
+    lines: jsonb("lines").$type<checkoutSessions[]>().notNull(),
+    totalcents: integer("total_cents").notNull(),
+    currency: text("currency").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const orders = pgTable("orders", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    status: text("status").$type<OrderStatus>().notNull(),
+    polarcheckoutId: text("polar_checkout_id"),
+    placeOrderId: text("place_order_id"),
+    totalcents: integer("total_cents").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const orderItems = pgTable("order_items", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    quantity: integer("quantity").notNull(),
+    unitPriceCents: integer("unit_price_cents").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),  
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+})
+
+
+export const productRelations = relations(products, ({ many }) => ({
+    orderItems: many(orderItems),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+    orders: many(orders),
+}));
+
+export const orderRelations = relations(orders, ({ one, many }) => ({
+    user: one(users, { fields: [orders.userId], references: [users.id] }),
+    orderItems: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+    order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }),
+    product: one(products, { fields: [orderItems.productId], references: [products.id] }),
+}));
+
+
+
+
+
+
+

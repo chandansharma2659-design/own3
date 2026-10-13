@@ -4,6 +4,7 @@ import cors from "cors";
 import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express";
 import { clerkWebhookHandler } from "./webhook/clerk";
 import { getEnv } from "./lib/env";
+import { startHealthCheckCron } from "./lib/cron";
 import { db } from "./db";
 import { users } from "./db/schema";
 import { parseRole } from "./lib/roles";
@@ -22,6 +23,10 @@ app.post("/webhooks/clerk", express.raw({ type: "application/json" }), (req, res
 app.use(express.json());
 app.use(cors());
 app.use(clerkMiddleware());
+
+app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+});
 
 app.get("/api/users/me", async (req, res) => {
     try {
@@ -89,4 +94,5 @@ if(fs.existsSync(publicDir)){
 
 app.listen(env.PORT, () => {
     console.log("Server is running on port:", env.PORT);
+    startHealthCheckCron(env.PORT);
 })

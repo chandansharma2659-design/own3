@@ -13,11 +13,11 @@ export async function clerkWebhookHandler(req: Request, res: Response) {
             return res.status(500).send("CLERK_WEBHOOK_SECRET is not set");
         }
 
-        const playload = req.body instanceof Buffer ? req.body.toString("utf8") :String(req.body);
-        const request = new Request ("https//internal/webhooks/clerk", {
+        const payload = req.body instanceof Buffer ? req.body.toString("utf8") : String(req.body);
+        const request = new Request("https://internal/webhooks/clerk", {
             method: "POST",
             headers: new Headers(req.headers as HeadersInit),
-            body: playload
+            body: payload
         });
 
         const evt = await verifyWebhook(request, { signingSecret: env.CLERK_WEBHOOK_SECRET });

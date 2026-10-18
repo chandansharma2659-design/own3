@@ -11,6 +11,9 @@ const envSchema = z.object({
     CLERK_SECRET_KEY: z.string().min(1),
     CLERK_WEBHOOK_SECRET: z.string().min(1),
 
+    STREAM_API_KEY: z.string().min(1),
+    STREAM_API_SECRET:z.string().min(1),
+
     FRONTEND_URL: z.string().url(),
 
     POLAR_ACCESS_TOKEN: z.string().min(1),

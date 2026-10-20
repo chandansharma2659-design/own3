@@ -3,7 +3,7 @@ import { relations } from "drizzle-orm"
 
 export type OrderStatus = "pending" | "paid" | "failed"
 export type UserRole = "customer" | "admin"
-export type checkoutSessions = {
+export type checkoutSessionsLine = {
     productId: string;
     quantity: number;
     unitPriceCents: number;
@@ -39,7 +39,7 @@ export const checkoutSessions = pgTable("checkout_sessions",{
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id").notNull().references(() => users.id),
     polarCheckoutId: text("polar_checkout_id").notNull().unique(),
-    lines: jsonb("lines").$type<checkoutSessions[]>().notNull(),
+    lines: jsonb("lines").$type<checkoutSessionsLine[]>().notNull(),
     totalcents: integer("total_cents").notNull(),
     currency: text("currency").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

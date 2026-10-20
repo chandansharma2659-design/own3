@@ -19,7 +19,7 @@ const envSchema = z.object({
     POLAR_ACCESS_TOKEN: z.string().min(1),
     POLAR_WEBHOOK_SECRET: z.string().min(1),
     POLAR_API_BASE: z.string().url().default("https://api.polar.sh"),
-    POLAR_CHECKOUT_PRODUCT_ID: z.string(),
+    POLAR_CHECKOUT_PRODUCT_ID: z.string().uuid(),
 
 
     IMAGEKIT_PUBLIC_KEY: z.string().min(1),

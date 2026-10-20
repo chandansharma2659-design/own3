@@ -10,9 +10,10 @@ import { startHealthCheckCron } from "./lib/cron";
 import fs from "node:fs";
 import path from "node:path";
 
-import producrRouter from "./routes/producrRouter";
+import producrRouter from "./routes/producrRouter"
 import meRouter from "./routes/meRouter"
 import streamRouter from "./routes/streamRouter"
+import checkoutRouter from "./routes/checkoutRouter"
 
 const env = getEnv(); 
 const app = express();
@@ -25,6 +26,7 @@ app.use(clerkMiddleware());
 app.use("/api/me", meRouter)
 app.use("/api/products", producrRouter)
 app.use("/api/stream", streamRouter)
+app.use("/api/checkout", checkoutRouter);
 
 app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });

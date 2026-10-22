@@ -10,27 +10,23 @@ import { startHealthCheckCron } from "./lib/cron";
 import fs from "node:fs";
 import path from "node:path";
 
+import * as Sentry from "@sentry/node"
+
 import producrRouter from "./routes/producrRouter"
 import meRouter from "./routes/meRouter"
 import streamRouter from "./routes/streamRouter"
 import checkoutRouter from "./routes/checkoutRouter"
 import { polarWebhookHandler } from "./webhook/polar";
+import { sentryClerkMiddleware } from "./middleware/sentryClerkUser";
 
 const env = getEnv(); 
 const app = express();
 
 
-app.post("/webhooks/clerk", express.raw({ type: "application/json" }), (req, res) => {
-    clerkWebhookHandler(req, res);
-});
-
-app.post("/webhooks/polar", (req,res) => {
-    polarWebhookHandler(req, res)
-});
-
 app.use(express.json());
 app.use(cors());
 app.use(clerkMiddleware());
+app.use(sentryClerkMiddleware);
 
 app.use("/api/me", meRouter)
 app.use("/api/products", producrRouter)
@@ -41,7 +37,13 @@ app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });
 });
 
+app.post("/webhooks/clerk", express.raw({ type: "application/json" }), (req, res) => {
+    clerkWebhookHandler(req, res);
+});
 
+app.post("/webhooks/polar", (req,res) => {
+    polarWebhookHandler(req, res)
+});
 
 
 const publicDir =  path.join(process.cwd(), "public")
@@ -63,7 +65,16 @@ if(fs.existsSync(publicDir)){
     })
 }
 
+Sentry.setupExpressErrorHandler(app);
 
+app.use((_err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    const sentryId = (res as express.Response & {sentry?:String }).sentry;
+
+    res.status(500).json({
+        error: "internal server error",
+        ...(sentryId !== undefined && {sentryId}),
+    });
+});
 
 app.listen(env.PORT, () => {
     console.log("Server is running on port:", env.PORT);

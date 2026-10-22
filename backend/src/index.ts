@@ -14,10 +14,19 @@ import producrRouter from "./routes/producrRouter"
 import meRouter from "./routes/meRouter"
 import streamRouter from "./routes/streamRouter"
 import checkoutRouter from "./routes/checkoutRouter"
+import { polarWebhookHandler } from "./webhook/polar";
 
 const env = getEnv(); 
 const app = express();
 
+
+app.post("/webhooks/clerk", express.raw({ type: "application/json" }), (req, res) => {
+    clerkWebhookHandler(req, res);
+});
+
+app.post("/webhooks/polar", (req,res) => {
+    polarWebhookHandler(req, res)
+});
 
 app.use(express.json());
 app.use(cors());
@@ -34,9 +43,6 @@ app.get("/health", (_req, res) => {
 
 
 
-app.post("/webhooks/clerk", express.raw({ type: "application/json" }), (req, res) => {
-    clerkWebhookHandler(req, res);
-});
 
 const publicDir =  path.join(process.cwd(), "public")
 if(fs.existsSync(publicDir)){

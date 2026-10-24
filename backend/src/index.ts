@@ -16,6 +16,9 @@ import producrRouter from "./routes/producrRouter"
 import meRouter from "./routes/meRouter"
 import streamRouter from "./routes/streamRouter"
 import checkoutRouter from "./routes/checkoutRouter"
+import adminRouter from "./routes/adminRouter"
+import orderRouter from "./routes/orderRouter"
+
 import { polarWebhookHandler } from "./webhook/polar";
 import { sentryClerkMiddleware } from "./middleware/sentryClerkUser";
 
@@ -32,6 +35,8 @@ app.use("/api/me", meRouter)
 app.use("/api/products", producrRouter)
 app.use("/api/stream", streamRouter)
 app.use("/api/checkout", checkoutRouter);
+app.use("/api/admin",adminRouter);
+app.use("/api/order",orderRouter);
 
 app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok" });
